@@ -1,5 +1,6 @@
 # Getting Started with Create React App
-
+We have downgraded the dependency version for react-router-dom from @latest to @5.2.0.
+Since Switch has been deprecated in the latest version of react-router-dom, we have used the older version of react-router-dom.
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
