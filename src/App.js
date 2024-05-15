@@ -9,68 +9,69 @@ import Missing from './Missing';
 import { Route, Switch, useHistory } from 'react-router-dom'; 
 import {useState, useEffect} from 'react';
 import {format} from 'date-fns';
+import api from './api/Post';
 
 function App() {
   const [search, setSearch] = useState('');
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      title: 'React Js Tutorial Blog',
-      datetime: 'July 01, 2021 10:00:00',
-      body: 'This is a blog post about React Js Tutorial Blog.'
-    },
-    {
-      id: 2,
-      title: 'Introduction to React Js Tutorial Blog',
-      datetime: 'July 02, 2021 10:00:00',
-      body: 'I am going to introduce you to React Js Tutorial Blog. I will show you how to use React Js Tutorial Blog. I will start with the basics. We will learn about React Js Tutorial Blog together. I hope you enjoy it.'
-    },
-    {
-      id: 3,
-      title: 'What is React Js Tutorial Blog',
-      datetime: 'July 03, 2021 10:00:00',
-      body: 'This is a tutorial blog about React Js Tutorial Blog. I will show you what is React Js Tutorial Blog. I will start with the basics.'
-    },
-    {
-      id: 4,
-      title: 'How to use React Js Tutorial Blog',
-      datetime: 'July 04, 2021 10:00:00',
-      body: 'This is a blog post about React Js Tutorial Blog. I will show you how to use React Js Tutorial Blog.'
-    },
-    {
-      id: 5,
-      title: 'React Js Tutorial Blog Tips',
-      datetime: 'July 05, 2021 10:00:00',
-      body: 'This is a blog post about React Js Tutorial Blog. I will show you some tips on how to use React Js Tutorial Blog.'
-    }
-  ]);
+  const [posts, setPosts] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const history = useHistory();
   const [postTitle, setPostTitle] = useState('');
   const [postBody, setPostBody] = useState('');
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get('http://localhost:3500/posts');
+        setPosts(response.data);
+        // if (response && response.data) { 
+        //   setPosts(response.data);
+        // }
+      } catch (error) {
+        if (error.response) {
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);    
+        } else if (error.request) {
+          console.log(`Error:${error.message}`); 
+        }
+      }
+    }; // Add a comma here
+    fetchData();
+  }, [])
+
+  useEffect(() => {
     const results = posts.filter(post => post.title.toLowerCase().includes(search.toLowerCase()) || post.body.toLowerCase().includes(search.toLowerCase()));
     setSearchResults(results.reverse());
   }, [posts, search]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit =  async (e) => {
     //e.PreventDefault();
     const id = posts.length ? posts[posts.length - 1].id + 1 : 1;
     const datetime = format(new Date(), 'MMMM dd, yyyy pp');
     const newPost = { id, title: postTitle, datetime, body: postBody };
-    const allPosts = [...posts, newPost];
-    setPosts(allPosts);
-    setPostTitle('');
-    setPostBody('');
-    history.push('/');
-  }
+    try{
+      const response = api.post('http://localhost:3500/posts', newPost);
+      const allPosts = [...posts, response.data];
+      setPosts(allPosts);
+      setPostTitle('');
+      setPostBody('');
+      history.push('/');
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
-  const handleDelete = (id) => {
-    const postsList = posts.filter(post => post.id !== id);
-    setPosts(postsList);
-    //history.push('/');
-  }
+  const handleDelete = async (id) => {
+    try{
+      await api.delete(`http://localhost:3500/posts/${id}`);
+      const postsList = posts.filter(post => post.id !== id);
+      setPosts(postsList);
+      history.push('/');
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
   
   return (
     <div className="App">
